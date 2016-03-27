@@ -1,10 +1,11 @@
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import edu.princeton.cs.algs4.Digraph;
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdIn;
+import edu.princeton.cs.algs4.StdOut;
 
 public class WordNet {
     
@@ -22,28 +23,28 @@ public class WordNet {
     
     private final Digraph digraph;
     private final TreeMap<Integer, Synset> syns;
-    private final TreeSet<String> nounWords;
+    private final TreeMap<String, Integer> nounWords;
     private final SAP sap;
     
     public WordNet(String synsets, String hypernyms)
     {
         if (synsets == null || hypernyms == null)
             throw new NullPointerException();
-        Scanner ssc = new Scanner(synsets);
-        Scanner hsc = new Scanner(hypernyms);
+        In ssc = new In(synsets);
+        In hsc = new In(hypernyms);
         
         syns = new TreeMap<Integer, Synset>();
-        nounWords = new TreeSet<String>();
+        nounWords = new TreeMap<String, Integer>();
         
         // Input the nouns
         while (ssc.hasNextLine()) {
-            String[] line = ssc.nextLine().split(",");
+            String[] line = ssc.readLine().split(",");
             assert(line.length == 3);
             String[] words = line[1].trim().split("\\s");
             List<String> wordList = new ArrayList<String>();
             for (String word : words) {
                 wordList.add(word);
-                nounWords.add(word);
+                nounWords.put(word, Integer.parseInt(line[0].trim()));
             }
             syns.put(Integer.parseInt(line[0].trim()), 
                      new Synset(line[1].trim(), wordList, line[2].trim()));
@@ -52,7 +53,7 @@ public class WordNet {
         
         digraph = new Digraph(syns.size());
         while (hsc.hasNextLine()) {
-            String[] numbers = hsc.nextLine().split(",");
+            String[] numbers = hsc.readLine().split(",");
             int hypo = Integer.parseInt(numbers[0].trim());
             for (int i = 1; i < numbers.length; i++) {
                 int hype = Integer.parseInt(numbers[i].trim());
@@ -65,29 +66,42 @@ public class WordNet {
     
     public Iterable<String> nouns()
     {
-        return nounWords;
+        return nounWords.keySet();
     }
     
     public boolean isNoun(String word)
     {
         if (word == null)
             throw new NullPointerException();
-        return nounWords.contains(word);
+        return nounWords.containsKey(word);
     }
     
     public int distance(String nounA, String nounB)
     {
-        
+        return sap.length(nounWords.get(nounA), 
+                          nounWords.get(nounB));
     }
     
     public String sap(String nounA, String nounB)
     {
-        
+        int ancestor = sap.ancestor(nounWords.get(nounA),
+                                    nounWords.get(nounB));
+        return syns.get(ancestor).synset;
     }
     
     public static void main(String[] args)
     {
-        
+        In in = new In("data\\wordnet\\digraph1.txt");
+        Digraph G = new Digraph(in);
+        SAP sap = new SAP(G);
+        while (!StdIn.isEmpty()) {
+            int v = StdIn.readInt();
+            int w = StdIn.readInt();
+            int length   = sap.length(v, w);
+            int ancestor = sap.ancestor(v, w);
+            StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
+        }
+
     }
 
         

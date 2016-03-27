@@ -25,22 +25,7 @@ public class SAP {
     {
         if (v < 0 || v >= digraph.V() || w < 0 || w >= digraph.V())
             throw new IndexOutOfBoundsException();
-        
-        Map<Integer, Integer> ancestorV = bfsForAncestor(v);
-        Map<Integer, Integer> ancestorW = bfsForAncestor(w);
-        
-        int shortestLength = Integer.MAX_VALUE;
-        for (Integer ancV : ancestorV.keySet()) {
-            if (ancestorW.containsKey(ancV)) {
-                shortestLength = Math.min(ancestorV.get(ancV)
-                                          + ancestorW.get(ancV),
-                                          shortestLength);
-            }
-        }
-        
-        if (shortestLength == Integer.MAX_VALUE)
-            return -1;
-        return shortestLength;
+        return shortestAncestralPath(v, w)[0];
     }
     
     private Map<Integer, Integer> bfsForAncestor(int node)
@@ -68,12 +53,7 @@ public class SAP {
         return ancestor;
     }
     
-    public int ancestor(int v, int w)
-    {
-        if (v < 0 || v >= digraph.V() || w < 0 || w >= digraph.V())
-            throw new IndexOutOfBoundsException();
-        
-
+    private Integer[] shortestAncestralPath(int v, int w) {
         Map<Integer, Integer> ancestorV = bfsForAncestor(v);
         Map<Integer, Integer> ancestorW = bfsForAncestor(w);
         
@@ -88,18 +68,59 @@ public class SAP {
             }
         }
         
-        return ancestor;
+        if (shortestLength == Integer.MAX_VALUE)
+            shortestLength = -1;
+        return new Integer[]{shortestLength, ancestor};
     }
     
-//    public int length(Iterable<Integer> v, Iterable<Integer> w)
-//    {
-//        
-//    }
-//    
-//    public int ancestor(Iterable<Integer> v, Iterable<Integer> w)
-//    {
-//        
-//    }
+    public int ancestor(int v, int w)
+    {
+        if (v < 0 || v >= digraph.V() || w < 0 || w >= digraph.V())
+            throw new IndexOutOfBoundsException();
+        
+
+        return shortestAncestralPath(v, w)[1];
+    }
+    
+    public int length(Iterable<Integer> v, Iterable<Integer> w)
+    {
+        if (v == null || w == null)
+            throw new NullPointerException();
+        
+        int shortestLength = Integer.MAX_VALUE;
+        for (Integer vnode : v) {
+            for (Integer wnode : w) {
+                shortestLength = Math.min(shortestLength,
+                        shortestAncestralPath(vnode, wnode)[0]);
+            }
+        }
+        
+        if (shortestLength == Integer.MAX_VALUE)
+            return -1;
+        return shortestLength;
+            
+    }
+    
+    public int ancestor(Iterable<Integer> v, Iterable<Integer> w)
+    {
+        if (v == null || w == null)
+            throw new NullPointerException();
+        
+        int shortestLength = Integer.MAX_VALUE;
+        int ancestor = -1;
+        for (Integer vnode : v) {
+            for (Integer wnode : w) {
+                Integer[] res = shortestAncestralPath(vnode, wnode);
+                if (shortestLength < res[0]) {
+                    shortestLength = res[0];
+                    ancestor = res[1];
+                }
+            }
+        }
+        
+        return ancestor;
+    }
+
 
     public static void main(String[] args)
     {
@@ -116,3 +137,4 @@ public class SAP {
 
     }
 }
+
