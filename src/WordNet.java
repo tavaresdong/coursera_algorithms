@@ -6,7 +6,7 @@ import java.util.TreeSet;
 
 import edu.princeton.cs.algs4.Digraph;
 
-final class WordNet {
+public class WordNet {
     
     private final class Synset {
         private final String synset;
@@ -23,6 +23,7 @@ final class WordNet {
     private final Digraph digraph;
     private final TreeMap<Integer, Synset> syns;
     private final TreeSet<String> nounWords;
+    private final SAP sap;
     
     public WordNet(String synsets, String hypernyms)
     {
@@ -58,6 +59,8 @@ final class WordNet {
                 digraph.addEdge(hypo, hype);
             }
         }
+        
+        sap = new SAP(digraph);
     }
     
     public Iterable<String> nouns()
