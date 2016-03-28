@@ -1,3 +1,4 @@
+package wordnet;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -16,17 +17,12 @@ public class SAP {
     {
         if (G == null) 
             throw new NullPointerException();
-        digraph = G;
+        
+        // Attention!, Need to make a deep copy, or we can modify 
+        // This object by taking actions on G from outside
+        digraph = new Digraph(G);
     }
     
-    // Length of shortest ancestral path between v and w, if 
-    // no path, return -1
-    public int length(int v, int w)
-    {
-        if (v < 0 || v >= digraph.V() || w < 0 || w >= digraph.V())
-            throw new IndexOutOfBoundsException();
-        return shortestAncestralPath(v, w)[0];
-    }
     
     private Map<Integer, Integer> bfsForAncestor(int node)
     {
@@ -41,7 +37,7 @@ public class SAP {
         while (!queue.isEmpty()) {
             int cur = queue.dequeue();
             int dist = ancestor.get(cur);
-            for (Integer nb : digraph.adj(cur)) {
+            for (int nb : digraph.adj(cur)) {
                 if (!marked.contains(nb)) {
                     marked.add(nb);
                     queue.enqueue(nb);
@@ -53,25 +49,46 @@ public class SAP {
         return ancestor;
     }
     
-    private Integer[] shortestAncestralPath(int v, int w) {
+    private int[] shortestAncestralPath(int v, int w) {
         Map<Integer, Integer> ancestorV = bfsForAncestor(v);
         Map<Integer, Integer> ancestorW = bfsForAncestor(w);
         
         int shortestLength = Integer.MAX_VALUE;
         int ancestor = -1;
-        for (Integer ancV : ancestorV.keySet()) {
+        for (int ancV : ancestorV.keySet()) {
             if (ancestorW.containsKey(ancV)) {
-                shortestLength = Math.min(ancestorV.get(ancV)
-                                          + ancestorW.get(ancV),
-                                          shortestLength);
-                ancestor = ancV;
+                int cur = ancestorV.get(ancV) + ancestorW.get(ancV);
+                if (cur < shortestLength) {
+                    shortestLength = cur;
+                    ancestor = ancV;
+                }
             }
         }
-        
+//        
+//        for (Integer ancW : ancestorW.keySet()) {
+//            if (ancestorV.containsKey(ancW)) {
+//                int cur = ancestorW.get(ancW) + ancestorV.get(ancW);
+//                if (cur < shortestLength) {
+//                    shortestLength = cur;
+//                    ancestor = ancW;
+//                }
+//            }
+//        }
+//        
         if (shortestLength == Integer.MAX_VALUE)
             shortestLength = -1;
-        return new Integer[]{shortestLength, ancestor};
+        return new int[]{shortestLength, ancestor};
     }
+    
+    // Length of shortest ancestral path between v and w, if 
+    // no path, return -1
+    public int length(int v, int w)
+    {
+        if (v < 0 || v >= digraph.V() || w < 0 || w >= digraph.V())
+            throw new IndexOutOfBoundsException();
+        return shortestAncestralPath(v, w)[0];
+    }
+
     
     public int ancestor(int v, int w)
     {
@@ -88,8 +105,8 @@ public class SAP {
             throw new NullPointerException();
         
         int shortestLength = Integer.MAX_VALUE;
-        for (Integer vnode : v) {
-            for (Integer wnode : w) {
+        for (int vnode : v) {
+            for (int wnode : w) {
                 shortestLength = Math.min(shortestLength,
                         shortestAncestralPath(vnode, wnode)[0]);
             }
@@ -108,10 +125,10 @@ public class SAP {
         
         int shortestLength = Integer.MAX_VALUE;
         int ancestor = -1;
-        for (Integer vnode : v) {
-            for (Integer wnode : w) {
-                Integer[] res = shortestAncestralPath(vnode, wnode);
-                if (shortestLength < res[0]) {
+        for (int vnode : v) {
+            for (int wnode : w) {
+                int[] res = shortestAncestralPath(vnode, wnode);
+                if (shortestLength > res[0]) {
                     shortestLength = res[0];
                     ancestor = res[1];
                 }
@@ -124,7 +141,7 @@ public class SAP {
 
     public static void main(String[] args)
     {
-        In in = new In("data\\wordnet\\digraph1.txt");
+        In in = new In("data\\wordnet\\digraph2.txt");
         Digraph G = new Digraph(in);
         SAP sap = new SAP(G);
         while (!StdIn.isEmpty()) {
